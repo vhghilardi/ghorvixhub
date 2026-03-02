@@ -1,0 +1,20 @@
+package GhorvixHub;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This CPP file should not be built}
+  {$IMPLICITBUILDING ON}
+  {$WARN IMPLICIT_BUILDING OFF}
+{$ENDIF}
+{$DESCRIPTION 'Ghorvix Hub API Client Component'}
+{$DESIGNONLY ON}
+
+requires
+  rtl,
+  vcl,
+  designide;
+
+contains
+  GhorvixHubClient in '..\Source\GhorvixHubClient.pas',
+  GhorvixHubClientReg in '..\Source\GhorvixHubClientReg.pas';
+
+end.

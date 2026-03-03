@@ -1,6 +1,6 @@
 # Ghorvix Hub API Client - Componente Delphi
 
-Componente Delphi para integração com a API Ghorvix Hub, permitindo enviar mensagens de texto, mídia, editar e excluir mensagens.
+Componente Delphi para integração com a API Ghorvix Hub, permitindo criar instâncias WhatsApp, obter QR Code para conexão, listar instâncias ativas, enviar mensagens de texto e mídia, editar e excluir mensagens.
 
 ## Requisitos
 
@@ -47,12 +47,40 @@ Se preferir usar sem instalar na paleta:
 
 ### Métodos da API
 
+#### Criar Instância e Obter QR Code
+```delphi
+var
+  Response: TGhorvixHubInstanceResponse;
+begin
+  // Cria instância e retorna QR Code para escanear no WhatsApp
+  Response := GhorvixHubClient1.CreateConnectInstance('minhaInstancia');  // instanceKey opcional
+  if Response.Success then
+  begin
+    // Response.QRCode contém o QR em base64 ou data URL - exiba em TImage ou salve
+    // Response.InstanceKey para usar em SendTextMessage/SendMediaMessage
+  end
+  else
+    ShowMessage('Erro: ' + Response.ErrorMessage);
+end;
+```
+
+#### Listar Instâncias Ativas
+```delphi
+var
+  Response: TGhorvixHubResponse;
+begin
+  Response := GhorvixHubClient1.ListActiveInstances;
+  if Response.Success then
+    Memo1.Lines.Text := Response.Content;  // JSON com lista de instâncias
+end;
+```
+
 #### Enviar Texto
 ```delphi
 var
   Response: TGhorvixHubResponse;
 begin
-  Response := GhorvixHubClient1.SendTextMessage('5511999999999', 'Mensagem via API');
+  Response := GhorvixHubClient1.SendTextMessage('5511999999999', 'Mensagem via API', 'minhaInstancia');  // instanceKey opcional
   if Response.Success then
     ShowMessage('Enviado com sucesso')
   else
@@ -68,7 +96,8 @@ Response := GhorvixHubClient1.SendMediaMessage(
   'imagem.jpg',              // fileName
   'image',                   // mediaType
   'image/jpeg',              // mimeType
-  '<BASE64_AQUI>'            // base64
+  '<BASE64_AQUI>',           // base64
+  'minhaInstancia'           // instanceKey (opcional)
 );
 ```
 
@@ -87,15 +116,29 @@ Response := GhorvixHubClient1.EditMessage(
 Response := GhorvixHubClient1.DeleteMessage(1);  // messageId
 ```
 
-### Estrutura TGhorvixHubResponse
+### Estruturas de Resposta
 
+**TGhorvixHubResponse:**
 ```delphi
 type
   TGhorvixHubResponse = record
     Success: Boolean;      // True se HTTP 2xx
     StatusCode: Integer;   // Código HTTP
-    Content: string;       // Corpo da resposta
+    Content: string;       // Corpo da resposta (JSON)
     ErrorMessage: string;  // Mensagem de erro (se houver)
+  end;
+```
+
+**TGhorvixHubInstanceResponse** (para CreateConnectInstance):
+```delphi
+type
+  TGhorvixHubInstanceResponse = record
+    Success: Boolean;
+    StatusCode: Integer;
+    Content: string;
+    ErrorMessage: string;
+    InstanceKey: string;   // Chave da instância criada
+    QRCode: string;       // QR Code em base64 ou data URL
   end;
 ```
 
@@ -118,6 +161,8 @@ O componente implementa os seguintes endpoints da Ghorvix Hub API:
 
 | Método | Endpoint | Descrição |
 |--------|----------|-----------|
+| POST | /api/v1/instances/create-connect | Criar instância e obter QR Code |
+| GET | /api/v1/instances/active | Listar instâncias ativas |
 | POST | /api/v1/messages/text | Enviar mensagem de texto |
 | POST | /api/v1/messages/media | Enviar mensagem com mídia |
 | PUT | /api/v1/messages/{id} | Editar mensagem |
@@ -125,4 +170,8 @@ O componente implementa os seguintes endpoints da Ghorvix Hub API:
 
 ## Licença
 
-Uso livre para projetos pessoais e comerciais.
+O componente é **gratuito**, porém funciona apenas para:
+- **Teste de 3 dias** na plataforma Ghorvix Hub
+- **Assinantes** da plataforma [ghorvix.com.br/app](https://ghorvix.com.br/app)
+
+Para uso em produção, é necessário ser assinante da plataforma.

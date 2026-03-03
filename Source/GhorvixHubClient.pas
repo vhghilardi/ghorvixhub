@@ -18,6 +18,15 @@ type
     ErrorMessage: string;
   end;
 
+  TGhorvixHubInstanceResponse = record
+    Success: Boolean;
+    StatusCode: Integer;
+    Content: string;
+    ErrorMessage: string;
+    InstanceKey: string;   // Chave da instância criada
+    QRCode: string;       // QRCode em base64 ou data URL para exibir
+  end;
+
   TGhorvixHubClient = class(TComponent)
   private
     FToken: string;
@@ -37,11 +46,17 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
+    { Criar e Conectar Instância - POST /api/v1/instances/create-connect - Retorna QRCode }
+    function CreateConnectInstance(const AInstanceKey: string = ''): TGhorvixHubInstanceResponse;
+
+    { Listar Instâncias Ativas - GET /api/v1/instances/active }
+    function ListActiveInstances: TGhorvixHubResponse;
+
     { Enviar Texto - POST /api/v1/messages/text }
-    function SendTextMessage(const ATo, AMessage: string): TGhorvixHubResponse;
+    function SendTextMessage(const ATo, AMessage: string; const AInstanceKey: string = ''): TGhorvixHubResponse;
 
     { Enviar Mídia - POST /api/v1/messages/media }
-    function SendMediaMessage(const ATo, AMessage, AFileName, AMediaType, AMimeType, ABase64: string): TGhorvixHubResponse;
+    function SendMediaMessage(const ATo, AMessage, AFileName, AMediaType, AMimeType, ABase64: string; const AInstanceKey: string = ''): TGhorvixHubResponse;
 
     { Editar Mensagem - PUT /api/v1/messages/{id}
     function EditMessage(const AMessageId: Integer; const ATo, AMessage: string; AStatus: Integer = 0): TGhorvixHubResponse;
@@ -166,6 +181,8 @@ begin
     begin
       if AMethod = 'DELETE' then
         Resp := Req.Delete(URL)
+      else if AMethod = 'GET' then
+        Resp := Req.Get(URL)
       else
         Resp := nil;
     end;
@@ -188,7 +205,67 @@ begin
   end;
 end;
 
-function TGhorvixHubClient.SendTextMessage(const ATo, AMessage: string): TGhorvixHubResponse;
+function TGhorvixHubClient.CreateConnectInstance(const AInstanceKey: string): TGhorvixHubInstanceResponse;
+var
+  Body: TJSONObject;
+  BaseResp: TGhorvixHubResponse;
+  JSON: TJSONObject;
+  Val: TJSONValue;
+begin
+  Result.Success := False;
+  Result.StatusCode := 0;
+  Result.Content := '';
+  Result.ErrorMessage := '';
+  Result.InstanceKey := '';
+  Result.QRCode := '';
+
+  Body := TJSONObject.Create;
+  try
+    if AInstanceKey <> '' then
+      Body.AddPair('instanceKey', AInstanceKey);
+    BaseResp := DoRequest('POST', 'api/v1/instances/create-connect', Body.ToJSON);
+  finally
+    Body.Free;
+  end;
+
+  Result.Success := BaseResp.Success;
+  Result.StatusCode := BaseResp.StatusCode;
+  Result.Content := BaseResp.Content;
+  Result.ErrorMessage := BaseResp.ErrorMessage;
+
+  if BaseResp.Success and (BaseResp.Content <> '') then
+  begin
+    try
+      JSON := TJSONObject.ParseJSONValue(BaseResp.Content) as TJSONObject;
+      if Assigned(JSON) then
+      try
+        Val := JSON.GetValue('instanceKey');
+        if Assigned(Val) then
+          Result.InstanceKey := Val.Value;
+        Val := JSON.GetValue('qrCode');
+        if Assigned(Val) then
+          Result.QRCode := Val.Value
+        else
+        begin
+          Val := JSON.GetValue('qrcode');
+          if Assigned(Val) then
+            Result.QRCode := Val.Value;
+        end;
+      finally
+        JSON.Free;
+      end;
+    except
+      // Ignora erro de parse - Content permanece disponível
+    end;
+  end;
+end;
+
+function TGhorvixHubClient.ListActiveInstances: TGhorvixHubResponse;
+begin
+  Result := DoRequest('GET', 'api/v1/instances/active', '');
+end;
+
+function TGhorvixHubClient.SendTextMessage(const ATo, AMessage: string; const AInstanceKey: string): TGhorvixHubResponse;
 var
   Body: TJSONObject;
 begin
@@ -196,6 +273,8 @@ begin
   try
     Body.AddPair('to', ATo);
     Body.AddPair('message', AMessage);
+    if AInstanceKey <> '' then
+      Body.AddPair('instanceKey', AInstanceKey);
     Result := DoRequest('POST', 'api/v1/messages/text', Body.ToJSON);
   finally
     Body.Free;
@@ -203,7 +282,7 @@ begin
 end;
 
 function TGhorvixHubClient.SendMediaMessage(const ATo, AMessage, AFileName,
-  AMediaType, AMimeType, ABase64: string): TGhorvixHubResponse;
+  AMediaType, AMimeType, ABase64: string; const AInstanceKey: string): TGhorvixHubResponse;
 var
   Body: TJSONObject;
 begin
@@ -215,6 +294,8 @@ begin
     Body.AddPair('mediaType', AMediaType);
     Body.AddPair('mimeType', AMimeType);
     Body.AddPair('base64', ABase64);
+    if AInstanceKey <> '' then
+      Body.AddPair('instanceKey', AInstanceKey);
     Result := DoRequest('POST', 'api/v1/messages/media', Body.ToJSON);
   finally
     Body.Free;

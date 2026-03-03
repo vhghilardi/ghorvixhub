@@ -1,0 +1,178 @@
+{
+  "info": {
+    "name": "Ghorvix Hub API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Criar e Conectar Instância (QRCode)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-api-token",
+            "value": "{{TOKEN_EMPRESA}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"instanceKey\": \"minhaInstanciaOpcional\"\n}"
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/instances/create-connect",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "instances",
+            "create-connect"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Listar Instâncias Ativas",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-api-token",
+            "value": "{{TOKEN_EMPRESA}}"
+          }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/instances/active",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "instances",
+            "active"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Enviar Texto",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-api-token",
+            "value": "{{TOKEN_EMPRESA}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"to\": \"5511999999999\",\n  \"message\": \"Mensagem via API\",\n  \"instanceKey\": \"SUA_INSTANCIA_ATIVA\"\n}"
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/messages/text",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "messages",
+            "text"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Enviar Mídia",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-api-token",
+            "value": "{{TOKEN_EMPRESA}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"to\": \"5511999999999\",\n  \"message\": \"Imagem via API\",\n  \"fileName\": \"imagem.jpg\",\n  \"mediaType\": \"image\",\n  \"mimeType\": \"image/jpeg\",\n  \"base64\": \"<BASE64_AQUI>\",\n  \"instanceKey\": \"SUA_INSTANCIA_ATIVA\"\n}"
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/messages/media",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "messages",
+            "media"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Editar Mensagem",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "x-api-token",
+            "value": "{{TOKEN_EMPRESA}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"to\": \"5511999999999\",\n  \"message\": \"Texto atualizado\",\n  \"status\": 0\n}"
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/messages/1",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "messages",
+            "1"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Excluir Mensagem",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "x-api-token",
+            "value": "{{TOKEN_EMPRESA}}"
+          }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/messages/1",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "messages",
+            "1"
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "TOKEN_EMPRESA",
+      "value": ""
+    }
+  ]
+}

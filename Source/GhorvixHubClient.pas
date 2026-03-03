@@ -12,8 +12,6 @@ uses
   Vcl.ExtCtrls;
 
 type
-  TGhorvixHubReceivedMessagesEvent = procedure(Sender: TObject; const Response: TGhorvixHubResponse) of object;
-
   TGhorvixHubResponse = record
     Success: Boolean;
     StatusCode: Integer;
@@ -29,6 +27,8 @@ type
     InstanceKey: string;   // Chave da instância criada
     QRCode: string;       // QRCode em base64 ou data URL para exibir
   end;
+
+  TGhorvixHubReceivedMessagesEvent = procedure(Sender: TObject; const Response: TGhorvixHubResponse) of object;
 
   TGhorvixHubClient = class(TComponent)
   private

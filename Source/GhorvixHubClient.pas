@@ -8,9 +8,12 @@ interface
 
 uses
   System.Classes, System.SysUtils, System.JSON, System.Net.HttpClient,
-  System.Net.HttpClientComponent, System.Net.URLClient;
+  System.Net.HttpClientComponent, System.Net.URLClient, System.NetEncoding,
+  Vcl.ExtCtrls;
 
 type
+  TGhorvixHubReceivedMessagesEvent = procedure(Sender: TObject; const Response: TGhorvixHubResponse) of object;
+
   TGhorvixHubResponse = record
     Success: Boolean;
     StatusCode: Integer;
@@ -34,11 +37,19 @@ type
     FHTTPClient: TNetHTTPClient;
     FHTTPRequest: TNetHTTPRequest;
     FOnRequestComplete: TNotifyEvent;
+    FTimer: TTimer;
+    FPollingInterval: Integer;
+    FPollingEnabled: Boolean;
+    FPollingInstanceKey: string;
+    FOnReceivedMessages: TGhorvixHubReceivedMessagesEvent;
     function GetRegistrationURL: string;
     function GetHTTPClient: TNetHTTPClient;
     function GetHTTPRequest: TNetHTTPRequest;
     procedure SetToken(const Value: string);
     procedure SetBaseURL(const Value: string);
+    procedure SetPollingEnabled(const Value: Boolean);
+    procedure SetPollingInterval(const Value: Integer);
+    procedure PollingTimerTick(Sender: TObject);
   protected
     function DoRequest(const AMethod, AEndpoint, ABody: string): TGhorvixHubResponse;
     function BuildURL(const APath: string): string;
@@ -75,11 +86,19 @@ type
 
     { Listar Clientes - GET /api/v1/clients }
     function ListClients(APage: Integer = 1; ALimit: Integer = 50; AAtivo: Boolean = True): TGhorvixHubResponse;
+
+    { Listar Mensagens Recebidas - GET /api/v1/messages/received (marca como lida) }
+    function ListReceivedMessages(APage: Integer = 1; ALimit: Integer = 50; const AStartDate: string = ''; const AEndDate: string = ''; const AInstanceKey: string = ''): TGhorvixHubResponse;
   published
     property Token: string read FToken write SetToken;
     property BaseURL: string read FBaseURL write SetBaseURL;
     property RegistrationURL: string read GetRegistrationURL stored False;  // URL para cadastro: https://ghorvix.com.br/app
     property OnRequestComplete: TNotifyEvent read FOnRequestComplete write FOnRequestComplete;
+    { Polling de mensagens recebidas }
+    property PollingEnabled: Boolean read FPollingEnabled write SetPollingEnabled default False;
+    property PollingInterval: Integer read FPollingInterval write SetPollingInterval default 5000;
+    property PollingInstanceKey: string read FPollingInstanceKey write FPollingInstanceKey;
+    property OnReceivedMessages: TGhorvixHubReceivedMessagesEvent read FOnReceivedMessages write FOnReceivedMessages;
   end;
 
 implementation
@@ -93,10 +112,20 @@ begin
   FBaseURL := 'https://ghorvix.com.br/app/api';
   FHTTPClient := nil;
   FHTTPRequest := nil;
+  FPollingInterval := 5000;
+  FPollingEnabled := False;
+  FPollingInstanceKey := '';
+  FOnReceivedMessages := nil;
 end;
 
 destructor TGhorvixHubClient.Destroy;
 begin
+  FPollingEnabled := False;
+  if Assigned(FTimer) then
+  begin
+    FTimer.Free;
+    FTimer := nil;
+  end;
   if Assigned(FHTTPRequest) then
     FHTTPRequest.Free;
   if Assigned(FHTTPClient) then
@@ -138,6 +167,46 @@ begin
   S := Trim(Value);
   if S <> '' then
     FBaseURL := S.TrimRight(['/']);
+end;
+
+procedure TGhorvixHubClient.SetPollingEnabled(const Value: Boolean);
+begin
+  if FPollingEnabled = Value then
+    Exit;
+  FPollingEnabled := Value;
+  if FPollingEnabled then
+  begin
+    if not Assigned(FTimer) then
+    begin
+      FTimer := TTimer.Create(Self);
+      FTimer.OnTimer := PollingTimerTick;
+    end;
+    FTimer.Interval := FPollingInterval;
+    FTimer.Enabled := True;
+  end
+  else
+    if Assigned(FTimer) then
+      FTimer.Enabled := False;
+end;
+
+procedure TGhorvixHubClient.SetPollingInterval(const Value: Integer);
+begin
+  if Value < 1000 then
+    FPollingInterval := 1000
+  else
+    FPollingInterval := Value;
+  if Assigned(FTimer) then
+    FTimer.Interval := FPollingInterval;
+end;
+
+procedure TGhorvixHubClient.PollingTimerTick(Sender: TObject);
+var
+  Resp: TGhorvixHubResponse;
+begin
+  if not Assigned(FOnReceivedMessages) then
+    Exit;
+  Resp := ListReceivedMessages(1, 50, '', '', FPollingInstanceKey);
+  FOnReceivedMessages(Self, Resp);
 end;
 
 function TGhorvixHubClient.BuildURL(const APath: string): string;
@@ -386,6 +455,20 @@ var
   Endpoint: string;
 begin
   Endpoint := Format('api/v1/clients?page=%d&limit=%d&ativo=%s', [APage, ALimit, LowerCase(BoolToStr(AAtivo, True))]);
+  Result := DoRequest('GET', Endpoint, '');
+end;
+
+function TGhorvixHubClient.ListReceivedMessages(APage, ALimit: Integer; const AStartDate, AEndDate, AInstanceKey: string): TGhorvixHubResponse;
+var
+  Endpoint: string;
+begin
+  Endpoint := Format('api/v1/messages/received?page=%d&limit=%d', [APage, ALimit]);
+  if Trim(AStartDate) <> '' then
+    Endpoint := Endpoint + '&startDate=' + TNetEncoding.URL.Encode(Trim(AStartDate));
+  if Trim(AEndDate) <> '' then
+    Endpoint := Endpoint + '&endDate=' + TNetEncoding.URL.Encode(Trim(AEndDate));
+  if Trim(AInstanceKey) <> '' then
+    Endpoint := Endpoint + '&instanceKey=' + TNetEncoding.URL.Encode(Trim(AInstanceKey));
   Result := DoRequest('GET', Endpoint, '');
 end;
 

@@ -1,6 +1,6 @@
 # Ghorvix Hub API Client - Componente Delphi
 
-Componente Delphi para integração com a API Ghorvix Hub, permitindo criar instâncias WhatsApp, obter QR Code para conexão, listar instâncias ativas, enviar mensagens de texto e mídia, editar e excluir mensagens, além de cadastrar e listar contatos e clientes.
+Componente Delphi para integração com a API Ghorvix Hub, permitindo criar instâncias WhatsApp, obter QR Code para conexão, listar instâncias ativas, enviar e receber mensagens de texto e mídia, editar e excluir mensagens, além de cadastrar e listar contatos e clientes. Inclui suporte a polling automático para buscar mensagens recebidas periodicamente.
 
 ## Requisitos
 
@@ -9,30 +9,12 @@ Componente Delphi para integração com a API Ghorvix Hub, permitindo criar inst
 
 ## Instalação
 
-### 1. Compilar o pacote
-
 1. Abra o Delphi
-2. **File > Open Project**
-3. Navegue até `Packages\GhorvixHub.dpk` e abra
-4. **Project > Build GhorvixHub** (ou pressione Ctrl+F9)
-
-### 2. Instalar na IDE
-
-1. **Component > Install Packages**
-2. Clique em **Add**
-3. Selecione o arquivo `GhorvixHub.bpl` (gerado na pasta do projeto ou em `Projects\Bpl`)
-4. Marque a caixa ao lado de **GhorvixHub** na lista
-5. Clique em **OK**
+2. **File > Open Project** e selecione `Packages\GhorvixHub.dpk`
+3. **Project > Build GhorvixHub** (ou Ctrl+F9)
+4. **Project > Install**
 
 O componente **TGhorvixHubClient** aparecerá na paleta de componentes na aba **Ghorvix**.
-
-### 3. Adicionar ao projeto (sem instalar na IDE)
-
-Se preferir usar sem instalar na paleta:
-
-1. Adicione a pasta `Source` ao **Library Path** do seu projeto
-2. Adicione `GhorvixHubClient` na cláusula `uses` da unit desejada
-3. Crie a instância em tempo de execução: `FGhorvixHub := TGhorvixHubClient.Create(Self);`
 
 ## Uso
 
@@ -44,6 +26,10 @@ Se preferir usar sem instalar na paleta:
 | **BaseURL** | string | URL base da API (padrão: `https://ghorvix.com.br/app/api`) |
 | **RegistrationURL** | string | URL para cadastro da empresa (somente leitura: `https://ghorvix.com.br/app`) |
 | **OnRequestComplete** | TNotifyEvent | Evento disparado após cada requisição |
+| **PollingEnabled** | Boolean | Ativa/desativa busca automática de mensagens recebidas |
+| **PollingInterval** | Integer | Intervalo do polling em ms (mín. 1000, padrão 5000) |
+| **PollingInstanceKey** | string | instanceKey usada no polling (opcional) |
+| **OnReceivedMessages** | TGhorvixHubReceivedMessagesEvent | Evento disparado quando o polling retorna mensagens |
 
 ### Métodos da API
 
@@ -153,6 +139,35 @@ if Response.Success then
   Memo1.Lines.Text := Response.Content;  // JSON com lista de clientes
 ```
 
+#### Listar Mensagens Recebidas
+```delphi
+// Busca mensagens recebidas (marca como lidas na API)
+// Parâmetros opcionais: startDate, endDate (YYYY-MM-DD), instanceKey
+Response := GhorvixHubClient1.ListReceivedMessages(
+  1, 50,                    // page, limit
+  '2026-01-01', '2026-01-31',  // startDate, endDate (vazios = sem filtro)
+  'minhaInstancia'          // instanceKey (vazio = todas)
+);
+if Response.Success then
+  Memo1.Lines.Text := Response.Content;  // JSON com lista de mensagens
+```
+
+#### Polling automático de mensagens recebidas
+```delphi
+// Configurar no Object Inspector ou em código:
+GhorvixHubClient1.PollingInstanceKey := 'minhaInstancia';  // opcional
+GhorvixHubClient1.PollingInterval := 5000;  // 5 segundos
+GhorvixHubClient1.OnReceivedMessages := GhorvixHubClient1ReceivedMessages;
+GhorvixHubClient1.PollingEnabled := True;
+
+// No handler:
+procedure TForm1.GhorvixHubClient1ReceivedMessages(Sender: TObject; const Response: TGhorvixHubResponse);
+begin
+  if Response.Success and (Response.Content <> '') then
+    Memo1.Lines.Text := Response.Content;  // Processar novas mensagens
+end;
+```
+
 ### Estruturas de Resposta
 
 **TGhorvixHubResponse:**
@@ -208,6 +223,7 @@ O componente implementa os seguintes endpoints da Ghorvix Hub API:
 | GET | /api/v1/contacts | Listar contatos (page, limit, ativo) |
 | POST | /api/v1/clients | Cadastrar cliente |
 | GET | /api/v1/clients | Listar clientes (page, limit, ativo) |
+| GET | /api/v1/messages/received | Listar mensagens recebidas (marca como lida) |
 
 ## Licença
 

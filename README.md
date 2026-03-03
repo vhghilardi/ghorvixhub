@@ -1,6 +1,6 @@
 # Ghorvix Hub API Client - Componente Delphi
 
-Componente Delphi para integração com a API Ghorvix Hub, permitindo criar instâncias WhatsApp, obter QR Code para conexão, listar instâncias ativas, enviar mensagens de texto e mídia, editar e excluir mensagens.
+Componente Delphi para integração com a API Ghorvix Hub, permitindo criar instâncias WhatsApp, obter QR Code para conexão, listar instâncias ativas, enviar mensagens de texto e mídia, editar e excluir mensagens, além de cadastrar e listar contatos e clientes.
 
 ## Requisitos
 
@@ -116,6 +116,43 @@ Response := GhorvixHubClient1.EditMessage(
 Response := GhorvixHubClient1.DeleteMessage(1);  // messageId
 ```
 
+#### Cadastrar Contato
+```delphi
+Response := GhorvixHubClient1.CreateContact(
+  'Contato API',           // nome
+  '5511999999999',        // whats
+  'contato@email.com',    // email
+  'Criado pela API',      // observacoes
+  -1,                     // clienteId (-1 = null, opcional)
+  True                    // ativo (opcional, padrão True)
+);
+```
+
+#### Listar Contatos
+```delphi
+Response := GhorvixHubClient1.ListContacts(1, 50, True);  // page, limit, ativo
+if Response.Success then
+  Memo1.Lines.Text := Response.Content;  // JSON com lista de contatos
+```
+
+#### Cadastrar Cliente
+```delphi
+Response := GhorvixHubClient1.CreateClient(
+  'Cliente API',          // nome
+  '5511888888888',       // whats
+  'cliente@email.com',    // email
+  'Cliente criado pela API',  // observacoes
+  True                   // ativo (opcional, padrão True)
+);
+```
+
+#### Listar Clientes
+```delphi
+Response := GhorvixHubClient1.ListClients(1, 50, True);  // page, limit, ativo
+if Response.Success then
+  Memo1.Lines.Text := Response.Content;  // JSON com lista de clientes
+```
+
 ### Estruturas de Resposta
 
 **TGhorvixHubResponse:**
@@ -167,6 +204,10 @@ O componente implementa os seguintes endpoints da Ghorvix Hub API:
 | POST | /api/v1/messages/media | Enviar mensagem com mídia |
 | PUT | /api/v1/messages/{id} | Editar mensagem |
 | DELETE | /api/v1/messages/{id} | Excluir mensagem |
+| POST | /api/v1/contacts | Cadastrar contato |
+| GET | /api/v1/contacts | Listar contatos (page, limit, ativo) |
+| POST | /api/v1/clients | Cadastrar cliente |
+| GET | /api/v1/clients | Listar clientes (page, limit, ativo) |
 
 ## Licença
 

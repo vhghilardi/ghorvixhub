@@ -63,6 +63,18 @@ type
 
     { Excluir Mensagem - DELETE /api/v1/messages/{id}
     function DeleteMessage(const AMessageId: Integer): TGhorvixHubResponse;
+
+    { Cadastrar Contato - POST /api/v1/contacts }
+    function CreateContact(const ANome, AWhats, AEmail, AObservacoes: string; AClienteId: Integer = -1; AAtivo: Boolean = True): TGhorvixHubResponse;
+
+    { Listar Contatos - GET /api/v1/contacts }
+    function ListContacts(APage: Integer = 1; ALimit: Integer = 50; AAtivo: Boolean = True): TGhorvixHubResponse;
+
+    { Cadastrar Cliente - POST /api/v1/clients }
+    function CreateClient(const ANome, AWhats, AEmail, AObservacoes: string; AAtivo: Boolean = True): TGhorvixHubResponse;
+
+    { Listar Clientes - GET /api/v1/clients }
+    function ListClients(APage: Integer = 1; ALimit: Integer = 50; AAtivo: Boolean = True): TGhorvixHubResponse;
   published
     property Token: string read FToken write SetToken;
     property BaseURL: string read FBaseURL write SetBaseURL;
@@ -321,6 +333,60 @@ end;
 function TGhorvixHubClient.DeleteMessage(const AMessageId: Integer): TGhorvixHubResponse;
 begin
   Result := DoRequest('DELETE', Format('api/v1/messages/%d', [AMessageId]), '');
+end;
+
+function TGhorvixHubClient.CreateContact(const ANome, AWhats, AEmail, AObservacoes: string; AClienteId: Integer; AAtivo: Boolean): TGhorvixHubResponse;
+var
+  Body: TJSONObject;
+begin
+  Body := TJSONObject.Create;
+  try
+    Body.AddPair('nome', ANome);
+    Body.AddPair('whats', AWhats);
+    Body.AddPair('email', AEmail);
+    Body.AddPair('observacoes', AObservacoes);
+    if AClienteId >= 0 then
+      Body.AddPair('clienteId', TJSONNumber.Create(AClienteId))
+    else
+      Body.AddPair('clienteId', TJSONNull.Create);
+    Body.AddPair('ativo', TJSONBool.Create(AAtivo));
+    Result := DoRequest('POST', 'api/v1/contacts', Body.ToJSON);
+  finally
+    Body.Free;
+  end;
+end;
+
+function TGhorvixHubClient.ListContacts(APage, ALimit: Integer; AAtivo: Boolean): TGhorvixHubResponse;
+var
+  Endpoint: string;
+begin
+  Endpoint := Format('api/v1/contacts?page=%d&limit=%d&ativo=%s', [APage, ALimit, LowerCase(BoolToStr(AAtivo, True))]);
+  Result := DoRequest('GET', Endpoint, '');
+end;
+
+function TGhorvixHubClient.CreateClient(const ANome, AWhats, AEmail, AObservacoes: string; AAtivo: Boolean): TGhorvixHubResponse;
+var
+  Body: TJSONObject;
+begin
+  Body := TJSONObject.Create;
+  try
+    Body.AddPair('nome', ANome);
+    Body.AddPair('whats', AWhats);
+    Body.AddPair('email', AEmail);
+    Body.AddPair('observacoes', AObservacoes);
+    Body.AddPair('ativo', TJSONBool.Create(AAtivo));
+    Result := DoRequest('POST', 'api/v1/clients', Body.ToJSON);
+  finally
+    Body.Free;
+  end;
+end;
+
+function TGhorvixHubClient.ListClients(APage, ALimit: Integer; AAtivo: Boolean): TGhorvixHubResponse;
+var
+  Endpoint: string;
+begin
+  Endpoint := Format('api/v1/clients?page=%d&limit=%d&ativo=%s', [APage, ALimit, LowerCase(BoolToStr(AAtivo, True))]);
+  Result := DoRequest('GET', Endpoint, '');
 end;
 
 end.

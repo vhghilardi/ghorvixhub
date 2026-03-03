@@ -85,6 +85,134 @@
       }
     },
     {
+      "name": "Cadastrar Contato",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-api-token",
+            "value": "{{TOKEN_EMPRESA}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Contato API\",\n  \"whats\": \"5511999999999\",\n  \"email\": \"contato@email.com\",\n  \"observacoes\": \"Criado pela API\",\n  \"clienteId\": null,\n  \"ativo\": true\n}"
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/contacts",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "contacts"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Listar Contatos",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-api-token",
+            "value": "{{TOKEN_EMPRESA}}"
+          }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/contacts?page=1&limit=50&ativo=true",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "contacts"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "50"
+            },
+            {
+              "key": "ativo",
+              "value": "true"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Cadastrar Cliente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-api-token",
+            "value": "{{TOKEN_EMPRESA}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Cliente API\",\n  \"whats\": \"5511888888888\",\n  \"email\": \"cliente@email.com\",\n  \"observacoes\": \"Cliente criado pela API\",\n  \"ativo\": true\n}"
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/clients",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "clients"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Listar Clientes",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-api-token",
+            "value": "{{TOKEN_EMPRESA}}"
+          }
+        ],
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/clients?page=1&limit=50&ativo=true",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "clients"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "50"
+            },
+            {
+              "key": "ativo",
+              "value": "true"
+            }
+          ]
+        }
+      }
+    },
+    {
       "name": "Enviar Mídia",
       "request": {
         "method": "POST",

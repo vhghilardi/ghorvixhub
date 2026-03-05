@@ -197,12 +197,15 @@ type
 ## Estrutura do Projeto
 
 ```
-ghiw/
+ghorvixhub/
 ├── Source/
 │   ├── GhorvixHubClient.pas      # Componente principal
 │   └── GhorvixHubClientReg.pas   # Registro design-time
 ├── Packages/
 │   └── GhorvixHub.dpk            # Pacote para instalação
+├── exemplos/
+│   ├── ExemploUso.dpr            # Projeto de exemplo
+│   └── README.md                 # Instruções do exemplo
 ├── ghorvix-hub-api-collection.json
 └── README.md
 ```
@@ -213,16 +216,16 @@ O componente implementa os seguintes endpoints da Ghorvix Hub API:
 
 | Método | Endpoint | Descrição |
 |--------|----------|-----------|
-| POST | /api/v1/instances/create-connect | Criar instância e obter QR Code |
+| POST | /api/v1/instances/create-connect | Criar e conectar instância (QRCode) |
 | GET | /api/v1/instances/active | Listar instâncias ativas |
-| POST | /api/v1/messages/text | Enviar mensagem de texto |
-| POST | /api/v1/messages/media | Enviar mensagem com mídia |
-| PUT | /api/v1/messages/{id} | Editar mensagem |
-| DELETE | /api/v1/messages/{id} | Excluir mensagem |
+| POST | /api/v1/messages/text | Enviar texto |
 | POST | /api/v1/contacts | Cadastrar contato |
 | GET | /api/v1/contacts | Listar contatos (page, limit, ativo) |
 | POST | /api/v1/clients | Cadastrar cliente |
 | GET | /api/v1/clients | Listar clientes (page, limit, ativo) |
+| POST | /api/v1/messages/media | Enviar mídia |
+| PUT | /api/v1/messages/{id} | Editar mensagem |
+| DELETE | /api/v1/messages/{id} | Excluir mensagem |
 | GET | /api/v1/messages/received | Listar mensagens recebidas (marca como lida) |
 
 ## Licença

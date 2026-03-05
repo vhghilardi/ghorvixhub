@@ -16,7 +16,12 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"instanceKey\": \"minhaInstanciaOpcional\"\n}"
+          "raw": "{\n  \"instanceKey\": \"minhaInstanciaOpcional\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
         },
         "url": {
           "raw": "{{BASE_URL}}/api/v1/instances/create-connect",
@@ -68,7 +73,12 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"to\": \"5511999999999\",\n  \"message\": \"Mensagem via API\",\n  \"instanceKey\": \"SUA_INSTANCIA_ATIVA\"\n}"
+          "raw": "{\n  \"to\": \"5511999999999\",\n  \"message\": \"Mensagem via API\",\n  \"instanceKey\": \"SUA_INSTANCIA_ATIVA\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
         },
         "url": {
           "raw": "{{BASE_URL}}/api/v1/messages/text",
@@ -96,7 +106,12 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"nome\": \"Contato API\",\n  \"whats\": \"5511999999999\",\n  \"email\": \"contato@email.com\",\n  \"observacoes\": \"Criado pela API\",\n  \"clienteId\": null,\n  \"ativo\": true\n}"
+          "raw": "{\n  \"nome\": \"Contato API\",\n  \"whats\": \"5511999999999\",\n  \"email\": \"contato@email.com\",\n  \"observacoes\": \"Criado pela API\",\n  \"clienteId\": null,\n  \"ativo\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
         },
         "url": {
           "raw": "{{BASE_URL}}/api/v1/contacts",
@@ -160,7 +175,12 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"nome\": \"Cliente API\",\n  \"whats\": \"5511888888888\",\n  \"email\": \"cliente@email.com\",\n  \"observacoes\": \"Cliente criado pela API\",\n  \"ativo\": true\n}"
+          "raw": "{\n  \"nome\": \"Cliente API\",\n  \"whats\": \"5511888888888\",\n  \"email\": \"cliente@email.com\",\n  \"observacoes\": \"Cliente criado pela API\",\n  \"ativo\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
         },
         "url": {
           "raw": "{{BASE_URL}}/api/v1/clients",
@@ -224,7 +244,12 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"to\": \"5511999999999\",\n  \"message\": \"Imagem via API\",\n  \"fileName\": \"imagem.jpg\",\n  \"mediaType\": \"image\",\n  \"mimeType\": \"image/jpeg\",\n  \"base64\": \"<BASE64_AQUI>\",\n  \"instanceKey\": \"SUA_INSTANCIA_ATIVA\"\n}"
+          "raw": "{\n  \"to\": \"5511999999999\",\n  \"message\": \"Imagem via API\",\n  \"fileName\": \"imagem.jpg\",\n  \"mediaType\": \"image\",\n  \"mimeType\": \"image/jpeg\",\n  \"base64\": \"<BASE64_AQUI>\",\n  \"instanceKey\": \"SUA_INSTANCIA_ATIVA\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
         },
         "url": {
           "raw": "{{BASE_URL}}/api/v1/messages/media",
@@ -252,7 +277,12 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"to\": \"5511999999999\",\n  \"message\": \"Texto atualizado\",\n  \"status\": 0\n}"
+          "raw": "{\n  \"to\": \"5511999999999\",\n  \"message\": \"Texto atualizado\",\n  \"status\": 0\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
         },
         "url": {
           "raw": "{{BASE_URL}}/api/v1/messages/1",

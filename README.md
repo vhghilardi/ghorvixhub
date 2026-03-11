@@ -87,6 +87,17 @@ Response := GhorvixHubClient1.SendMediaMessage(
 );
 ```
 
+#### Enviar Mídia por Caminho de Arquivo
+```delphi
+Response := GhorvixHubClient1.SendMediaMessageFromFile(
+  '5511999999999',                     // to
+  'Documento em anexo',                // message
+  'C:\Arquivos\contrato.pdf',          // caminho do arquivo
+  'minhaInstancia'                     // instanceKey (opcional)
+  // mediaType e mimeType opcionais - se vazio, detecta pela extensão
+);
+```
+
 #### Editar Mensagem
 ```delphi
 Response := GhorvixHubClient1.EditMessage(

@@ -7,7 +7,7 @@ unit GhorvixHubClient;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.JSON, System.Net.HttpClient,
+  System.Classes, System.SysUtils, System.JSON, System.IOUtils, System.Net.HttpClient,
   System.Net.HttpClientComponent, System.Net.URLClient, System.NetEncoding,
   Vcl.ExtCtrls;
 
@@ -42,6 +42,8 @@ type
     FPollingEnabled: Boolean;
     FPollingInstanceKey: string;
     FOnReceivedMessages: TGhorvixHubReceivedMessagesEvent;
+    function FileToBase64(const AFilePath: string): string;
+    procedure DetectMediaInfo(const AFileName: string; out AMediaType, AMimeType: string);
     function GetRegistrationURL: string;
     function GetHTTPClient: TNetHTTPClient;
     function GetHTTPRequest: TNetHTTPRequest;
@@ -68,6 +70,9 @@ type
 
     { Enviar Mídia - POST /api/v1/messages/media }
     function SendMediaMessage(const ATo, AMessage, AFileName, AMediaType, AMimeType, ABase64: string; const AInstanceKey: string = ''): TGhorvixHubResponse;
+    function SendMediaMessageFromFile(const ATo, AMessage, AFilePath: string): TGhorvixHubResponse; overload;
+    function SendMediaMessageFromFile(const ATo, AMessage, AFilePath, AInstanceKey: string): TGhorvixHubResponse; overload;
+    function SendMediaMessageFromFile(const ATo, AMessage, AFilePath, AInstanceKey, AMediaType, AMimeType: string): TGhorvixHubResponse; overload;
 
     { Editar Mensagem - PUT /api/v1/messages/{id}
     function EditMessage(const AMessageId: Integer; const ATo, AMessage: string; AStatus: Integer = 0): TGhorvixHubResponse;
@@ -207,6 +212,98 @@ begin
     Exit;
   Resp := ListReceivedMessages(1, 50, '', '', FPollingInstanceKey);
   FOnReceivedMessages(Self, Resp);
+end;
+
+function TGhorvixHubClient.FileToBase64(const AFilePath: string): string;
+var
+  Bytes: TBytes;
+  Encoder: TBase64Encoding;
+begin
+  Bytes := TFile.ReadAllBytes(AFilePath);
+  Encoder := TBase64Encoding.Create(0);
+  try
+    Result := Encoder.EncodeBytesToString(Bytes);
+  finally
+    Encoder.Free;
+  end;
+end;
+
+procedure TGhorvixHubClient.DetectMediaInfo(const AFileName: string; out AMediaType, AMimeType: string);
+var
+  Ext: string;
+begin
+  Ext := LowerCase(ExtractFileExt(AFileName));
+  if Ext.StartsWith('.') then
+    Delete(Ext, 1, 1);
+
+  AMediaType := 'document';
+  AMimeType := 'application/octet-stream';
+
+  if (Ext = 'jpg') or (Ext = 'jpeg') then
+  begin
+    AMediaType := 'image';
+    AMimeType := 'image/jpeg';
+  end
+  else if Ext = 'png' then
+  begin
+    AMediaType := 'image';
+    AMimeType := 'image/png';
+  end
+  else if Ext = 'gif' then
+  begin
+    AMediaType := 'image';
+    AMimeType := 'image/gif';
+  end
+  else if Ext = 'webp' then
+  begin
+    AMediaType := 'image';
+    AMimeType := 'image/webp';
+  end
+  else if Ext = 'mp3' then
+  begin
+    AMediaType := 'audio';
+    AMimeType := 'audio/mpeg';
+  end
+  else if Ext = 'ogg' then
+  begin
+    AMediaType := 'audio';
+    AMimeType := 'audio/ogg';
+  end
+  else if Ext = 'wav' then
+  begin
+    AMediaType := 'audio';
+    AMimeType := 'audio/wav';
+  end
+  else if (Ext = 'm4a') or (Ext = 'aac') then
+  begin
+    AMediaType := 'audio';
+    AMimeType := 'audio/mp4';
+  end
+  else if Ext = 'pdf' then
+  begin
+    AMediaType := 'document';
+    AMimeType := 'application/pdf';
+  end
+  else if Ext = 'doc' then
+  begin
+    AMediaType := 'document';
+    AMimeType := 'application/msword';
+  end
+  else if Ext = 'docx' then
+  begin
+    AMediaType := 'document';
+    AMimeType := 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  end
+  else if Ext = 'xls' then
+  begin
+    AMediaType := 'document';
+    AMimeType := 'application/vnd.ms-excel';
+  end
+  else if Ext = 'xlsx' then
+  begin
+    AMediaType := 'document';
+    AMimeType := 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  end;
 end;
 
 function TGhorvixHubClient.BuildURL(const APath: string): string;
@@ -381,6 +478,65 @@ begin
   finally
     Body.Free;
   end;
+end;
+
+function TGhorvixHubClient.SendMediaMessageFromFile(const ATo, AMessage,
+  AFilePath: string): TGhorvixHubResponse;
+begin
+  Result := SendMediaMessageFromFile(ATo, AMessage, AFilePath, '', '', '');
+end;
+
+function TGhorvixHubClient.SendMediaMessageFromFile(const ATo, AMessage,
+  AFilePath, AInstanceKey: string): TGhorvixHubResponse;
+begin
+  Result := SendMediaMessageFromFile(ATo, AMessage, AFilePath, AInstanceKey, '', '');
+end;
+
+function TGhorvixHubClient.SendMediaMessageFromFile(const ATo, AMessage, AFilePath,
+  AInstanceKey, AMediaType, AMimeType: string): TGhorvixHubResponse;
+var
+  FileName: string;
+  Base64Value: string;
+  MediaTypeValue: string;
+  MimeTypeValue: string;
+begin
+  Result.Success := False;
+  Result.StatusCode := 0;
+  Result.Content := '';
+  Result.ErrorMessage := '';
+
+  if Trim(AFilePath) = '' then
+  begin
+    Result.ErrorMessage := 'Caminho do arquivo não informado.';
+    Exit;
+  end;
+
+  if not TFile.Exists(AFilePath) then
+  begin
+    Result.ErrorMessage := 'Arquivo não encontrado: ' + AFilePath;
+    Exit;
+  end;
+
+  FileName := ExtractFileName(AFilePath);
+  Base64Value := FileToBase64(AFilePath);
+
+  if (Trim(AMediaType) = '') or (Trim(AMimeType) = '') then
+    DetectMediaInfo(FileName, MediaTypeValue, MimeTypeValue)
+  else
+  begin
+    MediaTypeValue := AMediaType;
+    MimeTypeValue := AMimeType;
+  end;
+
+  Result := SendMediaMessage(
+    ATo,
+    AMessage,
+    FileName,
+    MediaTypeValue,
+    MimeTypeValue,
+    Base64Value,
+    AInstanceKey
+  );
 end;
 
 function TGhorvixHubClient.EditMessage(const AMessageId: Integer; const ATo,

@@ -1,4 +1,4 @@
-﻿{*******************************************************************************
+{*******************************************************************************
   Ghorvix Hub API Client - Exemplo de Uso
   Demonstra o uso dos métodos do componente TGhorvixHubClient
 *******************************************************************************}
@@ -8,8 +8,8 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  System.IOUtils, System.NetEncoding, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
-  Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, GhorvixHubClient;
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
+  Vcl.ExtCtrls, GhorvixHubClient;
 
 type
   TFormMain = class(TForm)
@@ -52,7 +52,6 @@ type
     OpenDialogMidia: TOpenDialog;
     procedure Log(const AMsg: string);
     procedure OnReceivedMessages(Sender: TObject; const Response: TGhorvixHubResponse);
-    procedure ObterMediaTypeMime(const AExt: string; out AMediaType, AMimeType: string);
   public
   end;
 
@@ -73,7 +72,7 @@ begin
     'Áudio|*.mp3;*.ogg;*.wav;*.m4a;*.aac|' +
     'Todos os arquivos|*.*';
   OpenDialogMidia.FilterIndex := 0;
-  EditBaseURL.Text := 'https://ghorvix.com.br/app';
+  EditBaseURL.Text := 'https://ghorvix.com.br/app/api';
   EditInstancia.Text := 'minhaInstancia';
   EditPollingInterval.Text := '5000';
   Log('Configure Token, BaseURL e Instância antes de usar.');
@@ -150,35 +149,10 @@ begin
     Log('Erro: ' + Resp.ErrorMessage);
 end;
 
-procedure TFormMain.ObterMediaTypeMime(const AExt: string; out AMediaType, AMimeType: string);
-var
-  Ext: string;
-begin
-  Ext := LowerCase(AExt);
-  if Ext.StartsWith('.') then
-    Delete(Ext, 1, 1);
-  AMediaType := 'document';
-  AMimeType := 'application/octet-stream';
-  if (Ext = 'jpg') or (Ext = 'jpeg') then begin AMediaType := 'image'; AMimeType := 'image/jpeg'; end
-  else if Ext = 'png' then begin AMediaType := 'image'; AMimeType := 'image/png'; end
-  else if Ext = 'gif' then begin AMediaType := 'image'; AMimeType := 'image/gif'; end
-  else if Ext = 'webp' then begin AMediaType := 'image'; AMimeType := 'image/webp'; end
-  else if Ext = 'mp3' then begin AMediaType := 'audio'; AMimeType := 'audio/mpeg'; end
-  else if Ext = 'ogg' then begin AMediaType := 'audio'; AMimeType := 'audio/ogg'; end
-  else if Ext = 'wav' then begin AMediaType := 'audio'; AMimeType := 'audio/wav'; end
-  else if (Ext = 'm4a') or (Ext = 'aac') then begin AMediaType := 'audio'; AMimeType := 'audio/mp4'; end
-  else if Ext = 'pdf' then begin AMediaType := 'document'; AMimeType := 'application/pdf'; end
-  else if Ext = 'doc' then begin AMediaType := 'document'; AMimeType := 'application/msword'; end
-  else if Ext = 'docx' then begin AMediaType := 'document'; AMimeType := 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'; end
-  else if Ext = 'xls' then begin AMediaType := 'document'; AMimeType := 'application/vnd.ms-excel'; end
-  else if Ext = 'xlsx' then begin AMediaType := 'document'; AMimeType := 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'; end;
-end;
-
 procedure TFormMain.BtnEnviarMidiaClick(Sender: TObject);
 var
   Resp: TGhorvixHubResponse;
-  Numero, Msg, FileName, Base64Str, MediaType, MimeType: string;
-  FileBytes: TBytes;
+  Numero, Msg: string;
 begin
   if not OpenDialogMidia.Execute then
     Exit;
@@ -186,20 +160,11 @@ begin
   if Numero = '' then Exit;
   Msg := InputBox('Enviar Mídia', 'Legenda (opcional):', '');
   try
-    FileBytes := TFile.ReadAllBytes(OpenDialogMidia.FileName);
-    with TBase64Encoding.Create(0) do
-    try
-      Base64Str := EncodeBytesToString(FileBytes);
-    finally
-      Free;
-    end;
-    FileName := ExtractFileName(OpenDialogMidia.FileName);
-    ObterMediaTypeMime(ExtractFileExt(FileName), MediaType, MimeType);
     FGhorvixHub.Token := EditToken.Text;
     FGhorvixHub.BaseURL := EditBaseURL.Text;
-    Log('Enviando mídia ' + FileName + ' para ' + Numero + '...');
-    Resp := FGhorvixHub.SendMediaMessage(
-      Numero, Msg, FileName, MediaType, MimeType, Base64Str,
+    Log('Enviando mídia do arquivo ' + OpenDialogMidia.FileName + ' para ' + Numero + '...');
+    Resp := FGhorvixHub.SendMediaMessageFromFile(
+      Numero, Msg, OpenDialogMidia.FileName,
       Trim(EditInstancia.Text)
     );
     if Resp.Success then

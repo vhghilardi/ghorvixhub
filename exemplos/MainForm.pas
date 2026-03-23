@@ -1,4 +1,4 @@
-{*******************************************************************************
+﻿{*******************************************************************************
   Ghorvix Hub API Client - Exemplo de Uso
   Demonstra o uso dos métodos do componente TGhorvixHubClient
 *******************************************************************************}
@@ -72,7 +72,7 @@ begin
     'Áudio|*.mp3;*.ogg;*.wav;*.m4a;*.aac|' +
     'Todos os arquivos|*.*';
   OpenDialogMidia.FilterIndex := 0;
-  EditBaseURL.Text := 'https://ghorvix.com.br/app/api';
+  EditBaseURL.Text := 'https://ghorvix.com.br/app';
   EditInstancia.Text := 'minhaInstancia';
   EditPollingInterval.Text := '5000';
   Log('Configure Token, BaseURL e Instância antes de usar.');

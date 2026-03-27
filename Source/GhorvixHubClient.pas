@@ -67,12 +67,15 @@ type
 
     { Enviar Texto - POST /api/v1/messages/text }
     function SendTextMessage(const ATo, AMessage: string; const AInstanceKey: string = ''): TGhorvixHubResponse;
+    function SendTextMessageWithAI(const ATo, AMessage: string; AUsarIA: Boolean = True; const AInstanceKey: string = ''): TGhorvixHubResponse;
 
     { Enviar Mídia - POST /api/v1/messages/media }
     function SendMediaMessage(const ATo, AMessage, AFileName, AMediaType, AMimeType, ABase64: string; const AInstanceKey: string = ''): TGhorvixHubResponse;
     function SendMediaMessageFromFile(const ATo, AMessage, AFilePath: string): TGhorvixHubResponse; overload;
     function SendMediaMessageFromFile(const ATo, AMessage, AFilePath, AInstanceKey: string): TGhorvixHubResponse; overload;
     function SendMediaMessageFromFile(const ATo, AMessage, AFilePath, AInstanceKey, AMediaType, AMimeType: string): TGhorvixHubResponse; overload;
+    function SendBulkMessages(const ADestinatariosJsonArray, AMensagem, ALegenda: string; AUsarIA: Boolean = False; const AInstanceKey: string = ''; const AFileName: string = ''; const AMimeType: string = ''; const AMediaType: string = ''; const ABase64: string = ''): TGhorvixHubResponse;
+    function SendBulkMessagesFromFile(const ADestinatariosJsonArray, AMensagem, ALegenda, AFilePath: string; AUsarIA: Boolean = False; const AInstanceKey: string = ''; const AMediaType: string = ''; const AMimeType: string = ''): TGhorvixHubResponse;
 
     { Editar Mensagem - PUT /api/v1/messages/{id}
     function EditMessage(const AMessageId: Integer; const ATo, AMessage: string; AStatus: Integer = 0): TGhorvixHubResponse;
@@ -459,6 +462,41 @@ begin
   end;
 end;
 
+function TGhorvixHubClient.SendTextMessageWithAI(const ATo, AMessage: string; AUsarIA: Boolean;
+  const AInstanceKey: string): TGhorvixHubResponse;
+var
+  Body: TJSONObject;
+  FallbackBody: TJSONObject;
+begin
+  Body := TJSONObject.Create;
+  try
+    Body.AddPair('to', ATo);
+    Body.AddPair('message', AMessage);
+    Body.AddPair('usarIA', TJSONBool.Create(AUsarIA));
+    if AInstanceKey <> '' then
+      Body.AddPair('instanceKey', AInstanceKey);
+    Result := DoRequest('POST', 'api/v1/messages/text-with-ai', Body.ToJSON);
+
+    // Compatibilidade: alguns ambientes ainda não expõem o endpoint dedicado.
+    if (Result.StatusCode = 404) and AUsarIA then
+    begin
+      FallbackBody := TJSONObject.Create;
+      try
+        FallbackBody.AddPair('to', ATo);
+        FallbackBody.AddPair('message', AMessage);
+        FallbackBody.AddPair('usarIA', TJSONBool.Create(True));
+        if AInstanceKey <> '' then
+          FallbackBody.AddPair('instanceKey', AInstanceKey);
+        Result := DoRequest('POST', 'api/v1/messages/text', FallbackBody.ToJSON);
+      finally
+        FallbackBody.Free;
+      end;
+    end;
+  finally
+    Body.Free;
+  end;
+end;
+
 function TGhorvixHubClient.SendMediaMessage(const ATo, AMessage, AFileName,
   AMediaType, AMimeType, ABase64: string; const AInstanceKey: string): TGhorvixHubResponse;
 var
@@ -536,6 +574,108 @@ begin
     MimeTypeValue,
     Base64Value,
     AInstanceKey
+  );
+end;
+
+function TGhorvixHubClient.SendBulkMessages(const ADestinatariosJsonArray, AMensagem, ALegenda: string;
+  AUsarIA: Boolean; const AInstanceKey, AFileName, AMimeType, AMediaType, ABase64: string): TGhorvixHubResponse;
+var
+  Body: TJSONObject;
+  DestinatariosVal: TJSONValue;
+begin
+  Body := TJSONObject.Create;
+  try
+    DestinatariosVal := TJSONObject.ParseJSONValue(ADestinatariosJsonArray);
+    if not Assigned(DestinatariosVal) then
+    begin
+      Result.Success := False;
+      Result.StatusCode := 0;
+      Result.Content := '';
+      Result.ErrorMessage := 'destinatarios deve ser um JSON array válido.';
+      Exit;
+    end;
+    if not (DestinatariosVal is TJSONArray) then
+    begin
+      DestinatariosVal.Free;
+      Result.Success := False;
+      Result.StatusCode := 0;
+      Result.Content := '';
+      Result.ErrorMessage := 'destinatarios deve ser um array JSON.';
+      Exit;
+    end;
+
+    Body.AddPair('destinatarios', DestinatariosVal);
+    Body.AddPair('mensagem', AMensagem);
+    if ALegenda <> '' then
+      Body.AddPair('legenda', ALegenda);
+    Body.AddPair('usarIA', TJSONBool.Create(AUsarIA));
+
+    if AInstanceKey <> '' then
+      Body.AddPair('instanceKey', AInstanceKey)
+    else
+      Body.AddPair('instanceKey', TJSONNull.Create);
+
+    if AFileName <> '' then
+      Body.AddPair('fileName', AFileName);
+    if AMimeType <> '' then
+      Body.AddPair('mimeType', AMimeType);
+    if AMediaType <> '' then
+      Body.AddPair('mediaType', AMediaType);
+    if ABase64 <> '' then
+      Body.AddPair('base64', ABase64);
+
+    Result := DoRequest('POST', 'api/v1/messages/bulk', Body.ToJSON);
+  finally
+    Body.Free;
+  end;
+end;
+
+function TGhorvixHubClient.SendBulkMessagesFromFile(const ADestinatariosJsonArray, AMensagem, ALegenda,
+  AFilePath: string; AUsarIA: Boolean; const AInstanceKey, AMediaType, AMimeType: string): TGhorvixHubResponse;
+var
+  FileName: string;
+  Base64Value: string;
+  MediaTypeValue: string;
+  MimeTypeValue: string;
+begin
+  Result.Success := False;
+  Result.StatusCode := 0;
+  Result.Content := '';
+  Result.ErrorMessage := '';
+
+  if Trim(AFilePath) = '' then
+  begin
+    Result.ErrorMessage := 'Caminho do arquivo não informado.';
+    Exit;
+  end;
+
+  if not TFile.Exists(AFilePath) then
+  begin
+    Result.ErrorMessage := 'Arquivo não encontrado: ' + AFilePath;
+    Exit;
+  end;
+
+  FileName := ExtractFileName(AFilePath);
+  Base64Value := FileToBase64(AFilePath);
+
+  if (Trim(AMediaType) = '') or (Trim(AMimeType) = '') then
+    DetectMediaInfo(FileName, MediaTypeValue, MimeTypeValue)
+  else
+  begin
+    MediaTypeValue := AMediaType;
+    MimeTypeValue := AMimeType;
+  end;
+
+  Result := SendBulkMessages(
+    ADestinatariosJsonArray,
+    AMensagem,
+    ALegenda,
+    AUsarIA,
+    AInstanceKey,
+    FileName,
+    MimeTypeValue,
+    MediaTypeValue,
+    Base64Value
   );
 end;
 

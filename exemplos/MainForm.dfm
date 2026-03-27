@@ -50,6 +50,7 @@ object FormMain: TFormMain
       Width = 400
       Height = 23
       TabOrder = 0
+      Text = '26010162396466d5e7456334ee96450c5f9aafdddcde5209'
       TextHint = 'Cole seu token da API aqui'
     end
     object EditBaseURL: TEdit
@@ -65,6 +66,7 @@ object FormMain: TFormMain
       Width = 200
       Height = 23
       TabOrder = 2
+      Text = '11111111111'
       TextHint = 'minhaInstancia'
     end
   end
@@ -72,7 +74,7 @@ object FormMain: TFormMain
     Left = 0
     Top = 140
     Width = 820
-    Height = 103
+    Height = 140
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
@@ -103,22 +105,31 @@ object FormMain: TFormMain
       TabOrder = 2
       OnClick = BtnEnviarTextoClick
     end
-    object BtnEnviarMidia: TButton
+    object BtnEnviarTextoIA: TButton
       Left = 410
       Top = 8
       Width = 100
       Height = 25
-      Caption = 'Enviar M'#237'dia'
+      Caption = 'Texto com IA'
       TabOrder = 3
+      OnClick = BtnEnviarTextoIAClick
+    end
+    object BtnEnviarMidia: TButton
+      Left = 516
+      Top = 8
+      Width = 100
+      Height = 25
+      Caption = 'Enviar M'#237'dia'
+      TabOrder = 4
       OnClick = BtnEnviarMidiaClick
     end
     object BtnListarRecebidas: TButton
-      Left = 516
+      Left = 622
       Top = 8
       Width = 120
       Height = 25
       Caption = 'Mensagens Recebidas'
-      TabOrder = 9
+      TabOrder = 10
       OnClick = BtnListarRecebidasClick
     end
     object BtnCadastrarContato: TButton
@@ -157,13 +168,22 @@ object FormMain: TFormMain
       TabOrder = 5
       OnClick = BtnListarClientesClick
     end
+    object BtnEnviarBulk: TButton
+      Left = 476
+      Top = 39
+      Width = 140
+      Height = 25
+      Caption = 'Enviar em Massa'
+      TabOrder = 9
+      OnClick = BtnEnviarBulkClick
+    end
     object GroupBoxPolling: TGroupBox
-      Left = 660
-      Top = 4
-      Width = 152
+      Left = 622
+      Top = 37
+      Width = 190
       Height = 93
       Caption = ' Polling '
-      TabOrder = 7
+      TabOrder = 8
       object LabelPolling: TLabel
         Left = 12
         Top = 48

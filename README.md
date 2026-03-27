@@ -74,6 +74,16 @@ begin
 end;
 ```
 
+#### Enviar Texto com IA
+```delphi
+Response := GhorvixHubClient1.SendTextMessageWithAI(
+  '5511999999999',          // to
+  'Mensagem base para IA',  // message
+  True,                     // usarIA
+  'minhaInstancia'          // instanceKey (opcional)
+);
+```
+
 #### Enviar Mídia
 ```delphi
 Response := GhorvixHubClient1.SendMediaMessage(
@@ -95,6 +105,30 @@ Response := GhorvixHubClient1.SendMediaMessageFromFile(
   'C:\Arquivos\contrato.pdf',          // caminho do arquivo
   'minhaInstancia'                     // instanceKey (opcional)
   // mediaType e mimeType opcionais - se vazio, detecta pela extensão
+);
+```
+
+#### Enviar Mensagens em Massa (Bulk)
+```delphi
+// destinatarios pode conter strings e/ou objetos personalizados
+Response := GhorvixHubClient1.SendBulkMessages(
+  '["5511999999999",{"to":"5511888888888","mensagem":"Mensagem personalizada"}]',
+  'Texto base da campanha',
+  'Legenda opcional',
+  True,                 // usarIA
+  'minhaInstancia'      // instanceKey (opcional)
+);
+```
+
+#### Enviar Bulk com Mídia por Caminho de Arquivo
+```delphi
+Response := GhorvixHubClient1.SendBulkMessagesFromFile(
+  '["5511999999999","5511888888888"]',
+  'Texto base da campanha',
+  'Legenda com mídia',
+  'C:\Arquivos\campanha.jpg',
+  True,                 // usarIA
+  'minhaInstancia'      // instanceKey (opcional)
 );
 ```
 
@@ -230,11 +264,13 @@ O componente implementa os seguintes endpoints da Ghorvix Hub API:
 | POST | /api/v1/instances/create-connect | Criar e conectar instância (QRCode) |
 | GET | /api/v1/instances/active | Listar instâncias ativas |
 | POST | /api/v1/messages/text | Enviar texto |
+| POST | /api/v1/messages/text-with-ai | Enviar texto com IA |
 | POST | /api/v1/contacts | Cadastrar contato |
 | GET | /api/v1/contacts | Listar contatos (page, limit, ativo) |
 | POST | /api/v1/clients | Cadastrar cliente |
 | GET | /api/v1/clients | Listar clientes (page, limit, ativo) |
 | POST | /api/v1/messages/media | Enviar mídia |
+| POST | /api/v1/messages/bulk | Enviar mensagens em massa (background) |
 | PUT | /api/v1/messages/{id} | Editar mensagem |
 | DELETE | /api/v1/messages/{id} | Excluir mensagem |
 | GET | /api/v1/messages/received | Listar mensagens recebidas (marca como lida) |

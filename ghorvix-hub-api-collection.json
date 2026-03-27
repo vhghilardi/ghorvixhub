@@ -95,6 +95,39 @@
       }
     },
     {
+      "name": "Enviar Texto (com IA)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-api-token",
+            "value": "{{TOKEN_EMPRESA}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"to\": \"5511999999999\",\n  \"message\": \"Mensagem base para reescrita leve pela IA\",\n  \"usarIA\": true,\n  \"instanceKey\": \"SUA_INSTANCIA_ATIVA\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/messages/text-with-ai",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "messages",
+            "text-with-ai"
+          ]
+        }
+      }
+    },
+    {
       "name": "Cadastrar Contato",
       "request": {
         "method": "POST",
@@ -266,6 +299,39 @@
       }
     },
     {
+      "name": "Enviar Mensagens em Massa (Background)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-api-token",
+            "value": "{{TOKEN_EMPRESA}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"destinatarios\": [\n    \"5511999999999\",\n    { \"to\": \"5511888888888\", \"mensagem\": \"Mensagem personalizada\", \"legenda\": \"Legenda personalizada\" }\n  ],\n  \"mensagem\": \"Texto base da campanha\",\n  \"legenda\": \"Legenda para envio com mídia\",\n  \"usarIA\": true,\n  \"instanceKey\": null,\n  \"fileName\": \"campanha.jpg\",\n  \"mimeType\": \"image/jpeg\",\n  \"mediaType\": \"image\",\n  \"base64\": \"<BASE64_AQUI>\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/messages/bulk",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "messages",
+            "bulk"
+          ]
+        }
+      }
+    },
+    {
       "name": "Editar Mensagem",
       "request": {
         "method": "PUT",
@@ -323,7 +389,7 @@
       }
     },
     {
-      "name": "Listar Mensagens Recebidas (marca como lida)",
+      "name": "Listar Mensagens Recebidas",
       "request": {
         "method": "GET",
         "header": [
@@ -363,6 +429,18 @@
             {
               "key": "instanceKey",
               "value": "SUA_INSTANCIA"
+            },
+            {
+              "key": "whats",
+              "value": "5511999999999"
+            },
+            {
+              "key": "lida",
+              "value": "false"
+            },
+            {
+              "key": "apagada",
+              "value": "false"
             }
           ]
         }

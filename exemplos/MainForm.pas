@@ -1,4 +1,4 @@
-﻿{*******************************************************************************
+{*******************************************************************************
   Ghorvix Hub API Client - Exemplo de Uso
   Demonstra o uso dos métodos do componente TGhorvixHubClient
 *******************************************************************************}
@@ -7,7 +7,7 @@ unit MainForm;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, System.JSON,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ExtCtrls, GhorvixHubClient;
 
@@ -24,7 +24,9 @@ type
     BtnCriarInstancia: TButton;
     BtnListarInstancias: TButton;
     BtnEnviarTexto: TButton;
+    BtnEnviarTextoIA: TButton;
     BtnEnviarMidia: TButton;
+    BtnEnviarBulk: TButton;
     BtnListarRecebidas: TButton;
     BtnCadastrarContato: TButton;
     BtnListarContatos: TButton;
@@ -40,7 +42,9 @@ type
     procedure BtnCriarInstanciaClick(Sender: TObject);
     procedure BtnListarInstanciasClick(Sender: TObject);
     procedure BtnEnviarTextoClick(Sender: TObject);
+    procedure BtnEnviarTextoIAClick(Sender: TObject);
     procedure BtnEnviarMidiaClick(Sender: TObject);
+    procedure BtnEnviarBulkClick(Sender: TObject);
     procedure BtnListarRecebidasClick(Sender: TObject);
     procedure BtnCadastrarContatoClick(Sender: TObject);
     procedure BtnListarContatosClick(Sender: TObject);
@@ -149,6 +153,25 @@ begin
     Log('Erro: ' + Resp.ErrorMessage);
 end;
 
+procedure TFormMain.BtnEnviarTextoIAClick(Sender: TObject);
+var
+  Resp: TGhorvixHubResponse;
+  Numero, Msg: string;
+begin
+  Numero := InputBox('Enviar Texto com IA', 'Número (ex: 5511999999999):', '5511999999999');
+  if Numero = '' then
+    Exit;
+  Msg := InputBox('Enviar Texto com IA', 'Mensagem base:', 'Mensagem base para reescrita leve pela IA');
+  FGhorvixHub.Token := EditToken.Text;
+  FGhorvixHub.BaseURL := EditBaseURL.Text;
+  Log('Enviando texto com IA para ' + Numero + '...');
+  Resp := FGhorvixHub.SendTextMessageWithAI(Numero, Msg, True, Trim(EditInstancia.Text));
+  if Resp.Success then
+    Log('Mensagem com IA enviada com sucesso!')
+  else
+    Log('Erro: ' + Resp.ErrorMessage);
+end;
+
 procedure TFormMain.BtnEnviarMidiaClick(Sender: TObject);
 var
   Resp: TGhorvixHubResponse;
@@ -174,6 +197,91 @@ begin
   except
     on E: Exception do
       Log('Erro ao ler arquivo: ' + E.Message);
+  end;
+end;
+
+procedure TFormMain.BtnEnviarBulkClick(Sender: TObject);
+var
+  Resp: TGhorvixHubResponse;
+  DestinatariosTexto: string;
+  Mensagem: string;
+  Legenda: string;
+  Parts: TStringList;
+  Arr: TJSONArray;
+  I: Integer;
+  Numero: string;
+  UsarIA: Boolean;
+begin
+  DestinatariosTexto := InputBox(
+    'Envio em Massa',
+    'Destinatários separados por vírgula:',
+    '5511999999999,5511888888888'
+  );
+  if Trim(DestinatariosTexto) = '' then
+    Exit;
+
+  Mensagem := InputBox('Envio em Massa', 'Mensagem base:', 'Texto base da campanha');
+  Legenda := InputBox('Envio em Massa', 'Legenda (opcional):', '');
+  UsarIA := MessageDlg('Usar IA na mensagem?', mtConfirmation, [mbYes, mbNo], 0) = mrYes;
+
+  Parts := TStringList.Create;
+  Arr := TJSONArray.Create;
+  try
+    Parts.StrictDelimiter := True;
+    Parts.Delimiter := ',';
+    Parts.DelimitedText := DestinatariosTexto;
+    for I := 0 to Parts.Count - 1 do
+    begin
+      Numero := Trim(Parts[I]);
+      if Numero <> '' then
+        Arr.Add(Numero);
+    end;
+
+    if Arr.Count = 0 then
+    begin
+      Log('Erro: informe ao menos um destinatário válido.');
+      Exit;
+    end;
+
+    FGhorvixHub.Token := EditToken.Text;
+    FGhorvixHub.BaseURL := EditBaseURL.Text;
+
+    if MessageDlg('Deseja anexar mídia no envio em massa?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+    begin
+      if not OpenDialogMidia.Execute then
+      begin
+        Log('Envio em massa cancelado (sem arquivo).');
+        Exit;
+      end;
+      Log('Enviando campanha em massa com mídia...');
+      Resp := FGhorvixHub.SendBulkMessagesFromFile(
+        Arr.ToJSON,
+        Mensagem,
+        Legenda,
+        OpenDialogMidia.FileName,
+        UsarIA,
+        Trim(EditInstancia.Text)
+      );
+    end
+    else
+    begin
+      Log('Enviando campanha em massa sem mídia...');
+      Resp := FGhorvixHub.SendBulkMessages(
+        Arr.ToJSON,
+        Mensagem,
+        Legenda,
+        UsarIA,
+        Trim(EditInstancia.Text)
+      );
+    end;
+
+    if Resp.Success then
+      Log('Campanha em massa enviada com sucesso! Resposta: ' + Resp.Content)
+    else
+      Log('Erro: ' + Resp.ErrorMessage);
+  finally
+    Arr.Free;
+    Parts.Free;
   end;
 end;
 

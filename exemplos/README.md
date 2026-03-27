@@ -16,7 +16,9 @@ Projeto de demonstração do componente `TGhorvixHubClient`.
 | Criar Instância | `CreateConnectInstance` | Cria instância WhatsApp e obtém QR Code |
 | Listar Instâncias | `ListActiveInstances` | Lista instâncias ativas |
 | Enviar Texto | `SendTextMessage` | Envia mensagem de texto |
+| Enviar Texto com IA | `SendTextMessageWithAI` | Envia texto usando reescrita leve com IA |
 | Enviar Mídia | `SendMediaMessageFromFile` | Seleciona arquivo (imagem/documento/áudio) e o componente converte internamente para base64 |
+| Enviar em Massa | `SendBulkMessages` / `SendBulkMessagesFromFile` | Dispara campanha para múltiplos destinatários (com ou sem mídia) |
 | Mensagens Recebidas | `ListReceivedMessages` | Lista mensagens recebidas |
 | Cadastrar Contato | `CreateContact` | Cadastra novo contato |
 | Listar Contatos | `ListContacts` | Lista contatos |
